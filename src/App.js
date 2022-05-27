@@ -1,13 +1,14 @@
 import "./App.css";
 import Button from "./Button.js";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 const App = () => {
   const [prevSum, setPrevSum] = useState(0);
   const [currentSum, setCurrentSum] = useState(0);
   const [operation, setOperation] = useState("");
   const [total, setTotal] = useState(0);
-  // const [click, setClick] = useState(false);
+  const [currentFunc, setCurrentFunc] = useState("");
+  const prevFunc = useRef("");
 
   const digits = [
     "zero",
@@ -42,30 +43,59 @@ const App = () => {
   operationsMap.set("decimal", ".");
   operationsMap.set("clear", "C");
 
-  //think about using map for digits as well
-  // const handleDigit = (digit) => {
-  //   if (currentSum === 0) {
-  //     setCurrentSum({ currentSum: digitsMap.get(digit) });
-  //   } else {
-  //     setCurrentSum({
-  //       currentSum: digitsMap.get(digit) * 10 + digitsMap.get(digit),
-  //     });
-  //   }
-  // };
-  // const handleDigit = (digit) => {
-  //   currentSum === 0
-  //     ? setCurrentSum(digitsMap.get(digit))
-  //     : setCurrentSum(digitsMap.get(digit) * 10 + digitsMap.get(digit));
-  //   console.log(currentSum);
-  //   console.log("clicked");
-  // };
   const handleCalculation = (func) => {
+    // console.log(`init prevFunc: ${prevFunc.current}`);
+    if (func === "decimal") {
+      // setCurrentSum(currentSum.toFixed(1));
+      setCurrentSum(currentSum + ".");
+    }
     if (func === "clear") {
+      setPrevSum(0);
       setCurrentSum(0);
+      setTotal(0);
       setOperation(func);
       console.log("cleared");
+      // } else if (func === "add") {
+    } else if (
+      func === "add" ||
+      func === "subtract" ||
+      func === "multiply" ||
+      func === "divide"
+    ) {
+      prevFunc.current = func;
+      setCurrentFunc(func);
+      // console.log(`prevFunc: ${prevFunc.current}`);
+      setPrevSum(currentSum);
+      setCurrentSum(0);
+      setOperation(func);
+      // calcTotal(prevSum, func);
+      console.log(`${func} clicked`);
+    } else if (func === "equals") {
+      console.log(`prevFunc:  ${prevFunc}`);
+      handleEqualsPress(currentFunc);
+      // setTotal(calcTotal(prevSum, prevFunc.current));
+      // setOperation(func);
+      // console.log("equals");
+      setCurrentSum(0);
     } else {
       setOperation(func);
+      console.log(`${func} selected`);
+    }
+  };
+
+  const handleEqualsPress = (func) => {
+    if (func === "add") {
+      console.log(parseFloat(prevSum) + parseFloat(currentSum));
+      setTotal(parseFloat(prevSum) + parseFloat(currentSum));
+    } else if (func === "subtract") {
+      console.log(parseFloat(prevSum) - parseFloat(currentSum));
+      setTotal(parseFloat(prevSum) - parseFloat(currentSum));
+    } else if (func === "multiply") {
+      console.log(parseFloat(prevSum) * parseFloat(currentSum));
+      setTotal(parseFloat(prevSum) * parseFloat(currentSum));
+    } else if (func === "divide") {
+      console.log(parseFloat(prevSum) / parseFloat(currentSum));
+      setTotal(parseFloat(prevSum) / parseFloat(currentSum));
     }
   };
   return (
@@ -74,13 +104,22 @@ const App = () => {
         {digits.map((digit, index) => (
           <div
             onClick={() => {
-              // setClick(true);
+              // // setClick(true);
+              // if (currentSum === 0) {
+              //   setCurrentSum(index);
+              //   // setClick(false);
+              // } else {
+              //   setCurrentSum(currentSum * 10 + index);
+              //   // setClick(false);
+              // }
               if (currentSum === 0) {
                 setCurrentSum(index);
-                // setClick(false);
               } else {
-                setCurrentSum(currentSum * 10 + index);
-                // setClick(false);
+                if (currentSum.toString().includes(".")) {
+                  setCurrentSum(currentSum + index);
+                } else {
+                  setCurrentSum(currentSum * 10 + index);
+                }
               }
             }}
             key={index}
@@ -91,24 +130,7 @@ const App = () => {
         <Button name={"equals"} symbol="="></Button>
         <div>
           {operations.map((func) => (
-            <div
-              // onClick={() => {
-              //   // console.log(`click: ${click}`);
-              //   // setClick(true);
-              //   // console.log(`click?:${click} operation:${operation}`);
-
-              //   if (func === "clear") {
-              //     setCurrentSum(0);
-              //     setOperation(func);
-              //     console.log("cleared");
-              //   } else {
-              //     setOperation(func);
-              //   }
-              //   // console.log(`click:${click}`);
-              // }}
-              onClick={handleCalculation(func)}
-              key={func}
-            >
+            <div onClick={() => handleCalculation(func)} key={func}>
               <Button
                 name={func}
                 symbol={operationsMap.get(func)}
@@ -117,7 +139,10 @@ const App = () => {
             </div>
           ))}
           <div id="display">
-            Current Sum:{currentSum} Operation:{operation}
+            <p>Previous sum:{prevSum}</p>
+            <p id="display">Current Sum:{currentSum}</p>
+            <p>Operation:{operation}</p>
+            <p>Total: {total}</p>
           </div>
         </div>
       </div>
